@@ -38,17 +38,19 @@ if __name__ == '__main__':
         return tuple(discreet_state.astype(np.int64))
 
 
-    observation, info = env.reset()
-    # print(observation)
-    discreet_state = get_discreet_state(observation)
+
     # print(discreet_state)
     q_table = np.random.uniform(high=0, low=-2, size=(DISCRETE_OS_SIZE + [env.action_space.n]))
     # print(np.argmax(q_table[discreet_state]))
 
 
-    done = False
+
 
     for episode in range(EPISODE):
+        observation, info = env.reset()
+        # print(observation)
+        discreet_state = get_discreet_state(observation)
+        done = False
         if (episode % SHOW_EVERY == 0):
             print(episode)
             render = True
@@ -56,14 +58,14 @@ if __name__ == '__main__':
             render = False
         while not done:
             action = np.argmax(q_table[discreet_state])
-            new_state, reward, done, truncated, info = env.step(action)
+            new_state, reward, termminated, truncated, info = env.step(action)
             new_discreet_state = get_discreet_state(new_state)
-
+            done = termminated or truncated
             if render:
 
                 env.render()
 
-            if not done :
+            if not done:
                 max_future_q = np.max(q_table[new_discreet_state])
                 current_q = q_table[discreet_state + (action, )]
                 new_q = (1 - LEARNING_RATE) * current_q + LEARNING_RATE * (reward + DISCOUNT * max_future_q)
@@ -72,15 +74,14 @@ if __name__ == '__main__':
             elif new_state[0] >= env.goal_position:
                 print("we made it on {} episodes".format(episode))
                 q_table[discreet_state + (action,)] = 0
-            if done or truncated:
-                obs, inf0 = env.reset()
-                new_discreet_state= get_discreet_state(obs)
+
             discreet_state = new_discreet_state
 
 
 
 
     # print(q_table.shape)
+
     # print(q_table)
     # for _ in range(1000):
     #     env.render()
